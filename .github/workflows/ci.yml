@@ -31,12 +31,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     if: |
-      (github.event_name == 'workflow_dispatch' && github.repository == 'Ujhhgtg/WeKit-Dev') ||
+      (github.event_name == 'workflow_dispatch' && github.repository == 'gander2388/WeKit') ||
       (
-        !startsWith(github.event.head_commit.message, '[skip ci]') && 
+        !startsWith(github.event.head_commit.message, '[skip ci]') &&
         (
           github.event_name == 'pull_request' ||
-          (github.repository == 'Ujhhgtg/WeKit-Dev' && github.ref == 'refs/heads/master')
+          (github.repository == 'gander2388/WeKit' && github.ref == 'refs/heads/master')
         )
       )
     steps:
