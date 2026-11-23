@@ -122,19 +122,28 @@ jobs:
           uv run --no-sync --project wekit-zygisk python wekit-zygisk/native/tests/arm64_relocation.py
           ./x i18n-check
 
-      - name: Decode keystore
+      - name: Decode or generate keystore
         if: github.event_name != 'pull_request'
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > $RUNNER_TEMP/wekit-keystore.jks
+          if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
+            echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/wekit-keystore.jks"
+          else
+            keytool -genkeypair -v \
+              -keystore "$RUNNER_TEMP/wekit-keystore.jks" \
+              -alias wekit \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass 123456 -keypass 123456 \
+              -dname "CN=WeKit, OU=Dev, O=WeKit, L=City, S=State, C=CN"
+          fi
 
       - name: Build Release (Signed)
         if: github.event_name != 'pull_request'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           WEKIT_KEYSTORE_FILE: ${{ runner.temp }}/wekit-keystore.jks
-          WEKIT_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          WEKIT_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          WEKIT_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          WEKIT_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD || '123456' }}
+          WEKIT_KEY_ALIAS: ${{ secrets.KEY_ALIAS || 'wekit' }}
+          WEKIT_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || '123456' }}
         run: ./x build --release
 
       - name: Build Release (Unsigned)
